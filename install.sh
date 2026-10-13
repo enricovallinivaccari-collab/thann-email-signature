@@ -1,11 +1,13 @@
 #!/bin/bash
-# Installa la firma THANN in Apple Mail, sostituendo una firma segnaposto creata in Mail.
+# Installa la firma THANN in Apple Mail, sostituendo la firma segnaposto SIGNATURE_NAME creata in Mail.
 # Prima di lanciarlo: crea la firma segnaposto in Mail (vedi README.md) e chiudi Mail con Cmd+Q.
 set -euo pipefail
 
 # ── Configurazione ──────────────────────────────────────────────────────────
+# Nome della firma segnaposto creata in Mail (Impostazioni > Firme)
+SIGNATURE_NAME="THANN"
 # URL pubblico della cartella che contiene images/ (es. GitHub Pages), senza "/" finale
-BASE_URL="https://TUO-UTENTE.github.io/thann-email-signature"
+BASE_URL="https://enricovallinivaccari-collab.github.io/thann-email-signature"
 FACEBOOK_URL="https://www.facebook.com/"
 LINKEDIN_URL="https://www.linkedin.com/"
 INSTAGRAM_URL="https://www.instagram.com/"
@@ -24,15 +26,28 @@ if pgrep -xq Mail; then
   exit 1
 fi
 
-# Firme in iCloud Drive (sincronizzazione Mail attiva) o in locale; prende la più recente,
-# cioè il segnaposto appena creato.
+# Cartelle firme: iCloud Drive (sincronizzazione Mail attiva) e locale. In ognuna,
+# AllSignatures.plist associa il nome della firma al suo file <id>.mailsignature.
 shopt -s nullglob
-candidates=(
-  "$HOME"/Library/Mobile\ Documents/com~apple~mail/Data/V*/MailData/Signatures/*.mailsignature
-  "$HOME"/Library/Mail/V*/MailData/Signatures/*.mailsignature
+dirs=(
+  "$HOME"/Library/Mobile\ Documents/com~apple~mail/Data/V*/Signatures
+  "$HOME"/Library/Mail/V*/MailData/Signatures
 )
+candidates=()
+for dir in "${dirs[@]}"; do
+  plist="$dir/AllSignatures.plist"
+  [[ -r "$plist" ]] || continue
+  i=0
+  while name="$(/usr/libexec/PlistBuddy -c "Print :$i:SignatureName" "$plist" 2>/dev/null)"; do
+    if [[ "$name" == "$SIGNATURE_NAME" ]]; then
+      id="$(/usr/libexec/PlistBuddy -c "Print :$i:SignatureUniqueId" "$plist")"
+      [[ -f "$dir/$id.mailsignature" ]] && candidates+=("$dir/$id.mailsignature")
+    fi
+    i=$((i + 1))
+  done
+done
 if (( ${#candidates[@]} == 0 )); then
-  echo "Nessuna firma trovata. Crea il segnaposto in Mail; se esiste già, dai al Terminale" >&2
+  echo "Nessuna firma \"$SIGNATURE_NAME\" trovata. Creala in Mail; se esiste già, dai al Terminale" >&2
   echo "l'Accesso completo al disco (Impostazioni di Sistema > Privacy e sicurezza)." >&2
   exit 1
 fi
@@ -61,6 +76,9 @@ chflags nouchg "$SIG"
   printf '<body style="overflow-wrap: break-word; -webkit-nbsp-mode: space; line-break: after-white-space;">\n%s\n</body>' "$BODY"
 } > "$SIG"
 # Blocca il file, altrimenti Mail lo riscrive con la versione del segnaposto.
+chflags uchg "$SIG"
+# iCloud Drive può sostituire il file appena scritto perdendo il blocco: lo riapplica.
+sleep 5
 chflags uchg "$SIG"
 
 echo "Fatto. Riapri Mail: la firma è in Impostazioni > Firme."
