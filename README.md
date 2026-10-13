@@ -3,7 +3,7 @@
 Dal Figma "THANN" (Signature, node 20:3).
 
 - `signature.html`: la firma (HTML a tabelle compatibile con i client email). Aprila nel browser per vedere un'anteprima.
-- `images/`: PNG @3x esportati dal Figma (logo, tagline, icone social).
+- `images/`: PNG @3x esportati dal Figma (logo, tagline e 4 fette della barra social). La barra è fatta di immagini con lo sfondo incluso perché la modalità scura di Mail ricolora gli sfondi HTML.
 - `install.sh`: installa la firma in Apple Mail.
 
 ## 1. Pubblica le immagini su GitHub Pages
@@ -29,7 +29,7 @@ In cima a `install.sh` imposta `BASE_URL` (es. `https://<utente>.github.io/thann
 bash ~/Documents/THANN/email-signature/install.sh
 ```
 
-Lo script sostituisce la firma modificata più di recente (cioè il segnaposto), ne salva una copia in `backup/` e blocca il file, così Mail non lo sovrascrive. Se dice che non trova firme, dai al Terminale l'Accesso completo al disco (Impostazioni di Sistema → Privacy e sicurezza) e riprova.
+Lo script sostituisce la firma che si chiama "THANN" (`SIGNATURE_NAME` in `install.sh`), sia nella cartella firme di iCloud sia in quella locale. Ne salva una copia in `backup/` e blocca il file, così Mail non lo sovrascrive. Se dice che non trova firme, dai al Terminale l'Accesso completo al disco (Impostazioni di Sistema → Privacy e sicurezza) e riprova.
 
 Riapri Mail e scegli la firma in un nuovo messaggio. Nell'anteprima delle Impostazioni le immagini possono apparire come riquadri vuoti: è normale, nel messaggio si caricano.
 
